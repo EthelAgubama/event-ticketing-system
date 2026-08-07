@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Registration & Ticketing System</title>
+<style>
+  :root {
+    --navy: #0A1F44;
+    --blue: #1D4ED8;
+    --blue-dark: #1739A6;
+    --green: #15803D;
+    --green-bg: #DCFCE7;
+    --amber: #B45309;
+    --amber-bg: #FEF3C7;
+    --red: #B91C1C;
+    --red-bg: #FEE2E2;
+    --ink: #1A1D29;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --bg: #0F766E;
+    --bg-deep: #0B5E58;
+    --card: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(circle at 15% 8%, var(--bg) 0%, var(--bg-deep) 55%, #094843 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 64px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .balloon {
+    position: fixed;
+    width: 70px;
+    height: 88px;
+    border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
+    opacity: 0.85;
+    z-index: 0;
+    animation: drift 8s ease-in-out infinite;
+  }
+
+  .balloon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 1px;
+    height: 60px;
+    background: rgba(255,255,255,0.35);
+    transform: translateX(-50%);
+  }
+
+  .balloon::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 96%;
+    width: 6px;
+    height: 8px;
+    background: inherit;
+    filter: brightness(0.9);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    transform: translateX(-50%);
+  }
+
+  .b1 { top: 6%;  left: 6%;  background: #FDBA74; animation-delay: 0s; }
+  .b2 { top: 12%; left: 88%; background: #F472B6; animation-delay: 1.2s; width: 56px; height: 70px; }
+  .b3 { top: 62%; left: 4%;  background: #FDE047; animation-delay: 0.6s; width: 60px; height: 76px; }
+  .b4 { top: 70%; left: 90%; background: #67E8F9; animation-delay: 1.8s; }
+  .b5 { top: 38%; left: 93%; background: #FCA5A5; animation-delay: 0.9s; width: 50px; height: 64px; }
+  .b6 { top: 84%; left: 14%; background: #C4B5FD; animation-delay: 0.3s; width: 52px; height: 66px; }
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-18px) rotate(3deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .balloon { animation: none; }
+  }
+
+  @media (max-width: 900px) {
+    .balloon { display: none; }
+  }
+
+  .card {
+    background: var(--card);
+    width: 100%;
+    max-width: 640px;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+
+  .card-header p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .card-body { padding: 28px 32px 32px; }
+
+  form { display: grid; gap: 16px; margin-bottom: 8px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 520px) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+
+  .field select,
+  .field input {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    font-family: inherit;
+  }
+
+  .field select:focus,
+  .field input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.12);
+  }
+
+  button.register-btn {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s ease;
+  }
+
+  button.register-btn:hover { background: var(--blue-dark); }
+  button.register-btn:disabled { background: #A5B4E3; cursor: not-allowed; }
+
+  .status-msg {
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-top: 4px;
+    display: none;
+  }
+
+  .status-msg.show { display: block; }
+  .status-msg.success { background: var(--green-bg); color: var(--green); }
+  .status-msg.error { background: var(--red-bg); color: var(--red); }
+
+  .section-label {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--navy);
+    margin: 28px 0 12px;
+  }
+
+  .event-list { display: grid; gap: 10px; }
+
+  .event-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    gap: 12px;
+  }
+
+  .event-info { min-width: 0; }
+  .event-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .badge.available { background: var(--green-bg); color: var(--green); }
+  .badge.limited { background: var(--amber-bg); color: var(--amber); }
+  .badge.full { background: var(--red-bg); color: var(--red); }
+
+  .empty-state {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  .loading-state {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 12px 0;
+  }
+
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="balloon b1"></div>
+<div class="balloon b2"></div>
+<div class="balloon b3"></div>
+<div class="balloon b4"></div>
+<div class="balloon b5"></div>
+<div class="balloon b6"></div>
+
+<div>
+  <div class="card">
+    <div class="card-header">
+      <h1>Event Registration &amp; Ticketing System</h1>
+      <p>Pick an event below and reserve your spot.</p>
+    </div>
+
+    <div class="card-body">
+      <form id="register-form">
+        <div class="field-row">
+          <div class="field">
+            <label for="event-select">Event Name</label>
+            <select id="event-select" required>
+              <option value="" disabled selected>Loading events&hellip;</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="email-input">Email Address</label>
+            <input id="email-input" type="email" placeholder="participant@email.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="name-input">Full Name</label>
+          <input id="name-input" type="text" placeholder="Your name" required>
+        </div>
+
+        <div>
+          <button class="register-btn" type="submit" id="submit-btn">
+            Register &rarr;
+          </button>
+        </div>
+
+        <div class="status-msg" id="status-msg"></div>
+      </form>
+
+      <div class="section-label">Available Events</div>
+      <div class="event-list" id="event-list">
+        <div class="loading-state">Loading events&hellip;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "https://yibiebjui9.execute-api.us-east-1.amazonaws.com/dev";
+
+  const eventSelect = document.getElementById("event-select");
+  const eventList = document.getElementById("event-list");
+  const form = document.getElementById("register-form");
+  const submitBtn = document.getElementById("submit-btn");
+  const statusMsg = document.getElementById("status-msg");
+
+  let eventsCache = [];
+
+  function statusFor(event) {
+    const remaining = Number(event.capacity) - Number(event.registeredCount);
+    if (remaining <= 0) return "full";
+    if (remaining <= Math.max(3, Number(event.capacity) * 0.2)) return "limited";
+    return "available";
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function showStatus(message, type) {
+    statusMsg.textContent = message;
+    statusMsg.className = "status-msg show " + type;
+  }
+
+  function hideStatus() {
+    statusMsg.className = "status-msg";
+  }
+
+  async function loadEvents() {
+    try {
+      const res = await fetch(`${API_BASE}/events`);
+      if (!res.ok) throw new Error("Failed to load events");
+      const events = await res.json();
+      eventsCache = events;
+      renderEventList(events);
+      renderEventOptions(events);
+    } catch (err) {
+      eventList.innerHTML = `<div class="empty-state">Couldn't load events right now. Please refresh.</div>`;
+      eventSelect.innerHTML = `<option value="" disabled selected>Unable to load events</option>`;
+    }
+  }
+
+  function renderEventList(events) {
+    if (!events.length) {
+      eventList.innerHTML = `<div class="empty-state">No events available yet.</div>`;
+      return;
+    }
+    eventList.innerHTML = events.map(ev => {
+      const st = statusFor(ev);
+      const label = st === "available" ? "Available" : st === "limited" ? "Limited" : "Full";
+      return `
+        <div class="event-row">
+          <div class="event-info">
+            <div class="event-name">${escapeHtml(ev.eventName)}</div>
+            <div class="event-date">${formatDate(ev.eventDate)}</div>
+          </div>
+          <span class="badge ${st}">${label}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderEventOptions(events) {
+    if (!events.length) {
+      eventSelect.innerHTML = `<option value="" disabled selected>No events available</option>`;
+      return;
+    }
+    eventSelect.innerHTML = events.map(ev => {
+      const st = statusFor(ev);
+      const disabled = st === "full" ? "disabled" : "";
+      const suffix = st === "full" ? " (Full)" : st === "limited" ? " (Limited)" : "";
+      return `<option value="${ev.eventId}" ${disabled}>${escapeHtml(ev.eventName)}${suffix}</option>`;
+    }).join("");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideStatus();
+
+    const eventId = eventSelect.value;
+    const email = document.getElementById("email-input").value.trim();
+    const name = document.getElementById("name-input").value.trim();
+
+    if (!eventId || !email || !name) {
+      showStatus("Please fill in all fields.", "error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Registering…";
+
+    try {
+      const res = await fetch(`${API_BASE}/events/${eventId}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showStatus(data.error || "Registration failed. Please try again.", "error");
+      } else {
+        showStatus("You're registered! Check your email for confirmation.", "success");
+        form.reset();
+        loadEvents();
+      }
+    } catch (err) {
+      showStatus("Something went wrong. Please try again.", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Register →";
+    }
+  });
+
+  loadEvents();
+</script>
+
+</body>
+</html>
