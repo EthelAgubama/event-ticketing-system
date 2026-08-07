@@ -28,3 +28,18 @@ resource "aws_lambda_function" "register" {
   role              = aws_iam_role.lambda_exec.arn
   timeout           = 10
 }
+data "archive_file" "get_event_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/get_event/lambda_function.py"
+  output_path = "${path.module}/../lambda/get_event/get_event.zip"
+}
+
+resource "aws_lambda_function" "get_event" {
+  function_name     = "get_event"
+  filename          = data.archive_file.get_event_zip.output_path
+  source_code_hash  = data.archive_file.get_event_zip.output_base64sha256
+  handler           = "lambda_function.lambda_handler"
+  runtime           = "python3.12"
+  role              = aws_iam_role.lambda_exec.arn
+  timeout           = 10
+}
