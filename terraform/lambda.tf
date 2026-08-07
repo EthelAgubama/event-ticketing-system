@@ -43,3 +43,18 @@ resource "aws_lambda_function" "get_event" {
   role              = aws_iam_role.lambda_exec.arn
   timeout           = 10
 }
+data "archive_file" "list_registrations_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/list_registrations/lambda_function.py"
+  output_path = "${path.module}/../lambda/list_registrations/list_registrations.zip"
+}
+
+resource "aws_lambda_function" "list_registrations" {
+  function_name     = "list_registrations"
+  filename          = data.archive_file.list_registrations_zip.output_path
+  source_code_hash  = data.archive_file.list_registrations_zip.output_base64sha256
+  handler           = "lambda_function.lambda_handler"
+  runtime           = "python3.12"
+  role              = aws_iam_role.lambda_exec.arn
+  timeout           = 10
+}
