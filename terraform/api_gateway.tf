@@ -33,18 +33,63 @@ resource "aws_lambda_permission" "apigw_list_events" {
   source_arn    = "${aws_api_gateway_rest_api.event_api.execution_arn}/*/*"
 }
 
+resource "aws_api_gateway_resource" "event_id" {
+  rest_api_id = aws_api_gateway_rest_api.event_api.id
+  parent_id   = aws_api_gateway_resource.events.id
+  path_part   = "{eventId}"
+}
+
+resource "aws_api_gateway_resource" "register" {
+  rest_api_id = aws_api_gateway_rest_api.event_api.id
+  parent_id   = aws_api_gateway_resource.event_id.id
+  path_part   = "register"
+}
+
+resource "aws_api_gateway_method" "post_register" {
+  rest_api_id   = aws_api_gateway_rest_api.event_api.id
+  resource_id   = aws_api_gateway_resource.register.id
+  http_method   = "POST"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.path.eventId" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "post_register_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.event_api.id
+  resource_id             = aws_api_gateway_resource.register.id
+  http_method             = aws_api_gateway_method.post_register.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.register.invoke_arn
+}
+
+resource "aws_lambda_permission" "apigw_register" {
+  statement_id  = "AllowAPIGatewayInvokeRegister"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.register.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.event_api.execution_arn}/*/*"
+}
+
 resource "aws_api_gateway_deployment" "event_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.event_api.id
 
   depends_on = [
-    aws_api_gateway_integration.get_events_lambda
+    aws_api_gateway_integration.get_events_lambda,
+    aws_api_gateway_integration.post_register_lambda
   ]
 
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.events.id,
       aws_api_gateway_method.get_events.id,
-      aws_api_gateway_integration.get_events_lambda.id
+      aws_api_gateway_integration.get_events_lambda.id,
+      aws_api_gateway_resource.event_id.id,
+      aws_api_gateway_resource.register.id,
+      aws_api_gateway_method.post_register.id,
+      aws_api_gateway_integration.post_register_lambda.id
     ]))
   }
 

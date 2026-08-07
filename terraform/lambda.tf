@@ -13,3 +13,18 @@ resource "aws_lambda_function" "list_events" {
   role          = aws_iam_role.lambda_exec.arn
   timeout       = 10
 }
+data "archive_file" "register_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/register/lambda_function.py"
+  output_path = "${path.module}/../lambda/register/register.zip"
+}
+
+resource "aws_lambda_function" "register" {
+  function_name     = "register"
+  filename          = data.archive_file.register_zip.output_path
+  source_code_hash  = data.archive_file.register_zip.output_base64sha256
+  handler           = "lambda_function.lambda_handler"
+  runtime           = "python3.12"
+  role              = aws_iam_role.lambda_exec.arn
+  timeout           = 10
+}
