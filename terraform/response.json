@@ -1,0 +1,1 @@
+{"statusCode": 200, "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, "body": "[{\"eventId\": \"evt001\", \"eventName\": \"AWS Workshop Accra 2026\", \"capacity\": 50, \"eventDate\": \"2026-05-15\", \"registeredCount\": 0, \"status\": \"Available\"}]"}
