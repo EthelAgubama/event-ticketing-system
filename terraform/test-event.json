@@ -6,3 +6,15 @@
   "registeredCount": {"N": "0"},
   "status": {"S": "Available"}
 }
+@"
+{
+  "eventId": {"S": "evt002"},
+  "eventName": {"S": "Sumpaàna Foundation Luncheon"},
+  "eventDate": {"S": "2026-09-20"},
+  "capacity": {"N": "30"},
+  "registeredCount": {"N": "0"},
+  "status": {"S": "Available"}
+}
+"@ | Set-Content -Path .\test-event-2.json -Encoding utf8
+
+aws dynamodb put-item --table-name Events --item file://test-event-2.json

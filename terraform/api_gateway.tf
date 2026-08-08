@@ -135,6 +135,52 @@ resource "aws_lambda_permission" "apigw_list_registrations" {
   source_arn    = "${aws_api_gateway_rest_api.event_api.execution_arn}/*/*"
 }
 
+resource "aws_api_gateway_method" "register_options" {
+  rest_api_id   = aws_api_gateway_rest_api.event_api.id
+  resource_id   = aws_api_gateway_resource.register.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "register_options" {
+  rest_api_id = aws_api_gateway_rest_api.event_api.id
+  resource_id = aws_api_gateway_resource.register.id
+  http_method = aws_api_gateway_method.register_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "register_options" {
+  rest_api_id = aws_api_gateway_rest_api.event_api.id
+  resource_id = aws_api_gateway_resource.register.id
+  http_method = aws_api_gateway_method.register_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "register_options" {
+  rest_api_id = aws_api_gateway_rest_api.event_api.id
+  resource_id = aws_api_gateway_resource.register.id
+  http_method = aws_api_gateway_method.register_options.http_method
+  status_code = aws_api_gateway_method_response.register_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.register_options]
+}
+
 resource "aws_api_gateway_deployment" "event_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.event_api.id
 
@@ -142,7 +188,8 @@ resource "aws_api_gateway_deployment" "event_api_deployment" {
     aws_api_gateway_integration.get_events_lambda,
     aws_api_gateway_integration.post_register_lambda,
     aws_api_gateway_integration.get_event_lambda,
-    aws_api_gateway_integration.get_registrations_lambda
+    aws_api_gateway_integration.get_registrations_lambda,
+    aws_api_gateway_integration.register_options
   ]
 
   triggers = {
@@ -158,7 +205,9 @@ resource "aws_api_gateway_deployment" "event_api_deployment" {
       aws_api_gateway_integration.get_event_lambda.id,
       aws_api_gateway_resource.registrations.id,
       aws_api_gateway_method.get_registrations.id,
-      aws_api_gateway_integration.get_registrations_lambda.id
+      aws_api_gateway_integration.get_registrations_lambda.id,
+      aws_api_gateway_method.register_options.id,
+      aws_api_gateway_integration.register_options.id
     ]))
   }
 
