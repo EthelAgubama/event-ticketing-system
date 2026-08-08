@@ -13,7 +13,7 @@ Built as a capstone project for the Azubi Africa AWS Cloud Infrastructure Progra
 
 ## Overview
 
-This project lets organizers publish events and lets participants register for them through a simple web form. Every piece of infrastructure — from the database to the API to the frontend hosting — is provisioned and version-controlled with Terraform, and deployments are automated through a GitHub Actions CI/CD pipeline.
+This project lets organizers publish events and lets participants register for them through a simple web form. Every piece of infrastructure from the database to the API to the frontend hosting is provisioned and version-controlled with Terraform, and deployments are automated through a GitHub Actions CI/CD pipeline.
 
 ---
 
